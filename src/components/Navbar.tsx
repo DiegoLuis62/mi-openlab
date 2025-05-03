@@ -1,21 +1,14 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';
 import { useAuth } from '../context/useAuth';
 import { signOut } from 'firebase/auth';
 import { auth } from '../firebase';
+import { useDarkMode } from '../context/DarkModeContext';
 
 export default function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [darkMode, setDarkMode] = useState<boolean>(
-    localStorage.getItem('theme') === 'dark'
-  );
-
-  useEffect(() => {
-    document.documentElement.classList.toggle('dark', darkMode);
-    localStorage.setItem('theme', darkMode ? 'dark' : 'light');
-  }, [darkMode]);
+  const { darkMode, toggleDarkMode } = useDarkMode(); // Usando el contexto
 
   const handleLogout = async () => {
     await signOut(auth);
@@ -35,9 +28,7 @@ export default function Navbar() {
   return (
     <nav className="bg-white dark:bg-gray-900 shadow-md dark:shadow-gray-800">
       <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-        <h1 className="text-xl font-bold text-gray-800 dark:text-white">
-          Mi OpenLab
-        </h1>
+        <h1 className="text-xl font-bold text-gray-800 dark:text-white">Mi OpenLab</h1>
         <div className="flex items-center gap-4">
           <div className="hidden md:flex gap-4">
             {navItems.map((item) => (
@@ -63,7 +54,7 @@ export default function Navbar() {
             )}
           </div>
           <button
-            onClick={() => setDarkMode(!darkMode)}
+            onClick={toggleDarkMode} // Usando la función toggleDarkMode del contexto
             className="text-gray-800 dark:text-gray-200"
             aria-label="Toggle Dark Mode"
           >
