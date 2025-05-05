@@ -59,9 +59,9 @@ export default function Explore() {
                 className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-4 hover:ring-2 hover:ring-blue-400 transition"
               >
                 <h3 className="text-lg font-semibold mb-1">{proyecto.titulo}</h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+                {/* <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
                   {proyecto.descripcion}
-                </p>
+                </p> */}
                 <p className="text-sm font-medium text-blue-600 dark:text-blue-400">
                   Autor: {proyecto.autor}
                 </p>
