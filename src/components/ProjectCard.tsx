@@ -3,6 +3,7 @@ type Project = {
     titulo: string;
     descripcion: string;
     autor?: string; // ahora coinciden los tipos
+    name: string; // ← Esta línea debe existir
   };
   
   interface ProjectCardProps {

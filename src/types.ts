@@ -4,4 +4,5 @@ export type Project = {
     descripcion: string;
     autor?: string;
     uid?: string;
+    name: string; // ← Esta línea debe existir
   };

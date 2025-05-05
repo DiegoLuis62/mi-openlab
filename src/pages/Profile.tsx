@@ -12,7 +12,7 @@ import { useAuth } from "../context/useAuth";
 import ProjectForm from "../components/ProjectForm";
 import ProjectCard from "../components/ProjectCard";
 import ConfirmDialog from "../components/ConfirmDialog";
-import RepoSidebar from "../components/RepoSidebar";
+// import RepoSidebar from "../components/RepoSidebar";
 import { Project } from "../types"; // Importa el tipo Project
 
 export default function Profile() {
@@ -58,7 +58,7 @@ export default function Profile() {
 
   return (
     <div className="flex">
-      <RepoSidebar />
+      {/* <RepoSidebar /> */}
 
       <div className="flex-1 p-6">
         <div className="flex justify-between items-center mb-6">

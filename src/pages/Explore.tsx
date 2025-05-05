@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
-import RepoSidebar from '../components/RepoSidebar';  // Asegúrate de importar el componente correctamente
+
 
 type Proyecto = {
   id: string;
@@ -40,8 +40,7 @@ export default function Explore() {
 
   return (
     <div className="flex">
-      {/* Aquí estamos agregando RepoSidebar al lado izquierdo */}
-      <RepoSidebar />
+ 
 
       {/* El contenido principal */}
       <div className="max-w-6xl mx-auto mt-6 flex-1">
