@@ -1,24 +1,39 @@
-// src/pages/Explore.tsx
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
-
+import Filters from '../components/Filters';
 
 type Proyecto = {
   id: string;
   titulo: string;
   descripcion: string;
   autor: string;
+  categorias?: string[];
+  tecnologias?: string[];
+  etiquetas?: string[];
 };
 
 export default function Explore() {
   const [proyectos, setProyectos] = useState<Proyecto[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Estado para los filtros
+  const [filters, setFilters] = useState({
+    category: "",
+    technology: "",
+    tag: ""
+  });
+
+  // Proyectos filtrados por frontend (multi-filtros)
+  const [proyectosFiltrados, setProyectosFiltrados] = useState<Proyecto[]>([]);
+
+  // 1. Cargar todos los proyectos una sola vez
   useEffect(() => {
     const obtenerProyectos = async () => {
-      const querySnapshot = await getDocs(collection(db, 'proyectos'));
+      setLoading(true);
+      const colRef = collection(db, 'proyectos');
+      const querySnapshot = await getDocs(colRef);
       const lista: Proyecto[] = [];
 
       querySnapshot.forEach((doc) => {
@@ -28,6 +43,9 @@ export default function Explore() {
           titulo: data.titulo,
           descripcion: data.descripcion,
           autor: data.autor || 'anónimo',
+          categorias: data.categorias || [],
+          tecnologias: data.tecnologias || [],
+          etiquetas: data.etiquetas || [],
         });
       });
 
@@ -38,33 +56,67 @@ export default function Explore() {
     obtenerProyectos();
   }, []);
 
+  // 2. Filtrar en frontend según todos los filtros activos
+  useEffect(() => {
+    let resultado = proyectos;
+
+    if (filters.category) {
+      resultado = resultado.filter(p =>
+        p.categorias && p.categorias.includes(filters.category)
+      );
+    }
+    if (filters.technology) {
+      resultado = resultado.filter(p =>
+        p.tecnologias && p.tecnologias.includes(filters.technology)
+      );
+    }
+    if (filters.tag) {
+      resultado = resultado.filter(p =>
+        p.etiquetas && p.etiquetas.includes(filters.tag)
+      );
+    }
+
+    setProyectosFiltrados(resultado);
+  }, [filters, proyectos]);
+
   return (
     <div className="flex">
- 
-
-      {/* El contenido principal */}
       <div className="max-w-6xl mx-auto mt-6 flex-1">
         <h2 className="text-2xl font-bold mb-4">Proyectos Públicos</h2>
 
+        {/* Filtros */}
+        <Filters filters={filters} setFilters={setFilters} />
+
         {loading ? (
           <p className="text-gray-500 dark:text-gray-400">Cargando proyectos...</p>
-        ) : proyectos.length === 0 ? (
+        ) : proyectosFiltrados.length === 0 ? (
           <p className="text-gray-500 dark:text-gray-400">No hay proyectos disponibles.</p>
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {proyectos.map((proyecto) => (
+            {proyectosFiltrados.map((proyecto) => (
               <Link
                 key={proyecto.id}
                 to={`/project/${proyecto.id}`}
                 className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-4 hover:ring-2 hover:ring-blue-400 transition"
               >
                 <h3 className="text-lg font-semibold mb-1">{proyecto.titulo}</h3>
-                {/* <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
                   {proyecto.descripcion}
-                </p> */}
-                <p className="text-sm font-medium text-blue-600 dark:text-blue-400">
+                </p>
+                <p className="text-sm font-medium text-blue-600 dark:text-blue-400 mb-1">
                   Autor: {proyecto.autor}
                 </p>
+                <div className="text-xs text-gray-600 dark:text-gray-300">
+                  {proyecto.categorias && proyecto.categorias.length > 0 && (
+                    <div>Categorías: {proyecto.categorias.join(", ")}</div>
+                  )}
+                  {proyecto.tecnologias && proyecto.tecnologias.length > 0 && (
+                    <div>Tecnologías: {proyecto.tecnologias.join(", ")}</div>
+                  )}
+                  {proyecto.etiquetas && proyecto.etiquetas.length > 0 && (
+                    <div>Etiquetas: {proyecto.etiquetas.join(", ")}</div>
+                  )}
+                </div>
               </Link>
             ))}
           </div>

@@ -6,7 +6,11 @@ import Explore from '../pages/Explore';
 import ProjectDetail from '../pages/ProjectDetail';
 import MainLayout from '../layouts/MainLayout';
 import PrivateRoute from './PrivateRoute';
-
+import PasswordReset from '../pages/PasswordReset';
+import Feed from '../pages/Feed';
+import UserProfile from '../pages/UserProfile';
+import Groups from '../groups/Groups';
+import GroupDetail from '../groups/GroupDetail';
 
 export default function AppRouter() {
     return (
@@ -29,6 +33,14 @@ export default function AppRouter() {
                     }
                 />
                 <Route
+                    path="/password-reset"
+                    element={
+                        <MainLayout>
+                            <PasswordReset />
+                        </MainLayout>
+                    }
+                />
+                <Route
                     path="/register"
                     element={
                         <MainLayout>
@@ -47,11 +59,52 @@ export default function AppRouter() {
                     }
                 />
                 <Route
+                    path="/feed"
+                    element={
+                        <PrivateRoute>
+                            <MainLayout>
+                                <Feed />
+                            </MainLayout>
+                        </PrivateRoute>
+                    }
+                />
+                <Route
+                    path="/user/:id"
+                    element={
+                        <PrivateRoute>
+                            <MainLayout>
+                                <UserProfile />
+                            </MainLayout>
+                        </PrivateRoute>
+                    }
+                />
+                {/* Detalle de proyecto es PÚBLICO */}
+                <Route
                     path="/project/:id"
                     element={
                         <MainLayout>
                             <ProjectDetail />
                         </MainLayout>
+                    }
+                />
+                <Route
+                    path="/groups"
+                    element={
+                        <PrivateRoute>
+                            <MainLayout>
+                                <Groups />
+                            </MainLayout>
+                        </PrivateRoute>
+                    }
+                />
+                <Route
+                    path="/groups/:id"
+                    element={
+                        <PrivateRoute>
+                            <MainLayout>
+                                <GroupDetail />
+                            </MainLayout>
+                        </PrivateRoute>
                     }
                 />
             </Routes>

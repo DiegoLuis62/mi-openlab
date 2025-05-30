@@ -1,8 +1,50 @@
-export type Project = {
-    id: string;  // Asegúrate de que 'id' siempre sea un string, no undefined
+export interface Project {
+  id: string;
+  titulo: string;
+  descripcion: string;
+  autor: string;
+  uid: string;
+  imageUrl?: string;
+  githubLink?: string;
+  demoLink?: string;
+  categorias: string[];
+  tecnologias: string[];
+  etiquetas: string[];
+  likedBy?: string[];
+  name: string;
+}
+
+export interface User {
+  id: string;
+  email: string;
+  following: string[];
+  favorites?: string[];
+  habilidades?: string[];
+  followers?: string[];
+  experiencia?: {
+    rol: string;
+    empresa: string;
+    desde: string;
+    hasta: string;
+  }[];
+  educacion?: {
     titulo: string;
-    descripcion: string;
-    autor?: string;
-    uid?: string;
-    name: string; // ← Esta línea debe existir
-  };
+    institucion: string;
+    desde: string;
+    hasta: string;
+  }[];
+  linkedin?: string;
+  stack?: string[];
+  badges?: string[];
+  points?: number;
+}
+
+export interface Portfolio {
+  habilidades: string[];
+  experiencia: { rol: string; empresa: string; desde: string; hasta: string }[];
+  educacion: { titulo: string; institucion: string; desde: string; hasta: string }[];
+  linkedin: string;
+  stack: string[];
+  badges: string[];
+  puntos: number;
+}

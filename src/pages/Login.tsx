@@ -71,6 +71,11 @@ export default function Login() {
           Iniciar sesión
         </button>
       </form>
+      <p className="text-sm mt-2 text-center">
+        <Link to="/password-reset" className="text-blue-600 underline">
+          ¿Olvidaste tu contraseña?
+        </Link>
+      </p>
       <p className="text-sm mt-4 text-center">
         ¿No tienes cuenta?{' '}
         <Link to="/register" className="text-blue-600 hover:underline">
