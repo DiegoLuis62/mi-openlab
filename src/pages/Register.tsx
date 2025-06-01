@@ -3,6 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../firebase';
 import { FirebaseError } from 'firebase/app';
+import { db } from '../firebase';
+import { setDoc, doc } from 'firebase/firestore';
 
 export default function Register() {
   const [email, setEmail] = useState('');
@@ -31,7 +33,19 @@ export default function Register() {
     }
 
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // Crear documento del usuario en Firestore:
+      await setDoc(doc(db, "users", user.uid), {
+        email: user.email,
+        favorites: [],
+        following: [],
+        badges: [],
+        points: 0
+        // Puedes agregar otros campos iniciales aquí si lo deseas
+      });
+
       navigate('/profile'); // Redirigir tras registro exitoso
     } catch (error) {
       const err = error as FirebaseError;
