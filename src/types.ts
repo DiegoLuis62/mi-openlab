@@ -37,6 +37,14 @@ export interface User {
   stack?: string[];
   badges?: string[];
   points?: number;
+  lastActivity?: string;
+  activityLog?: ActivityLogEntry[];
+}
+
+export interface ActivityLogEntry {
+  type: string;
+  message: string;
+  timestamp: string;
 }
 
 export interface Portfolio {

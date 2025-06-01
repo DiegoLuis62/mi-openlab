@@ -5,6 +5,7 @@ import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useAuth } from "../context/useAuth";
 import { Project } from "../types";
 import ChipsInput from "./ChipsInput";
+import { addActivity } from "../utils/activity"; // NUEVO: importa el utilitario
 
 export interface ProjectFormProps {
   existingProject: Project | null;
@@ -77,15 +78,16 @@ export default function ProjectForm({
       etiquetas,
     };
 
-
     // Para debug:
-    console.log("Datos a guardar:", data);
+    // console.log("Datos a guardar:", data);
 
     try {
       if (existingProject?.id) {
         await updateDoc(doc(db, "proyectos", existingProject.id), data);
+        await addActivity(user.uid, "edit", `Editó el proyecto "${titulo}"`); // REGISTRO ACTIVIDAD
       } else {
         await addDoc(collection(db, "proyectos"), data);
+        await addActivity(user.uid, "create", `Creó el proyecto "${titulo}"`); // REGISTRO ACTIVIDAD
       }
       onSaved();
       onClose();

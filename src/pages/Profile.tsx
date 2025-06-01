@@ -16,7 +16,8 @@ import { useAuth } from "../context/useAuth";
 import ProjectForm from "../components/ProjectForm";
 import ProjectCard from "../components/ProjectCard";
 import ConfirmDialog from "../components/ConfirmDialog";
-import { Project, User, Portfolio } from "../types";
+import { Project, User, Portfolio, ActivityLogEntry } from "../types";
+import { addActivity } from "../utils/activity";
 
 export default function Profile() {
   const { user } = useAuth();
@@ -45,6 +46,10 @@ export default function Profile() {
     badges: [],
     puntos: 0,
   });
+
+  // Actividad
+  const [lastActivity, setLastActivity] = useState<string | null>(null);
+  const [activityLog, setActivityLog] = useState<ActivityLogEntry[]>([]);
 
   // Cargar mis proyectos
   useEffect(() => {
@@ -82,7 +87,7 @@ export default function Profile() {
     }
   }, [user]);
 
-  // Cargar favoritos del usuario y sus proyectos
+  // Cargar favoritos del usuario y sus proyectos + actividad
   useEffect(() => {
     const fetchFavorites = async () => {
       if (!user || !user.uid) return;
@@ -104,6 +109,16 @@ export default function Profile() {
           badges: data.badges ?? [],
           puntos: data.points ?? 0,
         });
+
+        // Actividad
+        setLastActivity(data.lastActivity ?? null);
+        setActivityLog(
+          Array.isArray(data.activityLog)
+            ? data.activityLog
+                .slice()
+                .sort((a, b) => (b.timestamp ?? 0).localeCompare(a.timestamp ?? 0))
+            : []
+        );
 
         if (favs.length > 0) {
           // Firestore 'in' permite hasta 10 elementos por consulta
@@ -199,8 +214,10 @@ export default function Profile() {
   };
 
   const handleDelete = async (id: string | undefined) => {
-    if (!id) return;
+    if (!id || !user?.uid) return;
+    const proj = projects.find((p) => p.id === id);
     await deleteDoc(doc(db, "proyectos", id));
+    await addActivity(user.uid, "delete", `Eliminó el proyecto "${proj?.titulo ?? ""}"`); // REGISTRO ACTIVIDAD
     setProjects(projects.filter((p) => p.id !== id));
     setProjectToDelete(null);
   };
@@ -291,10 +308,33 @@ export default function Profile() {
         </div>
 
         {/* DASHBOARD */}
-        <div className="mb-6 p-4 bg-gray-100 dark:bg-gray-700 rounded-lg flex gap-6">
+        <div className="mb-6 p-4 bg-gray-100 dark:bg-gray-700 rounded-lg flex gap-6 flex-wrap">
           <div><b>Proyectos:</b> {projects.length}</div>
           <div><b>Likes recibidos:</b> {totalLikes}</div>
           <div><b>Favoritos:</b> {userFavorites.length}</div>
+          <div>
+            <b>Última actividad:</b><br />
+            {lastActivity
+              ? new Date(lastActivity).toLocaleString()
+              : "Sin actividad reciente"}
+          </div>
+        </div>
+
+        {/* TIMELINE DE ACTIVIDAD */}
+        <div className="mb-8">
+          <h3 className="text-xl font-bold dark:text-white mb-2">Actividad reciente</h3>
+          {activityLog.length === 0 ? (
+            <p className="text-gray-500 dark:text-gray-300">Sin actividad reciente.</p>
+          ) : (
+            <ul className="space-y-2">
+              {activityLog.slice(0, 20).map((act, i) => (
+                <li key={i} className="text-sm text-gray-800 dark:text-gray-200">
+                  <span className="font-semibold">{new Date(act.timestamp).toLocaleString()}:</span>{" "}
+                  {act.message}
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
 
         {loading ? (
