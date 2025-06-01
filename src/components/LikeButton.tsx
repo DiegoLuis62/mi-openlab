@@ -1,5 +1,6 @@
 import { doc, updateDoc, arrayUnion, arrayRemove } from "firebase/firestore";
 import { db } from '../firebase';
+import { useState } from "react";
 
 interface LikeButtonProps {
   projectId: string;
@@ -8,14 +9,17 @@ interface LikeButtonProps {
 }
 
 export default function LikeButton({ projectId, likedBy, userId }: LikeButtonProps) {
-  const isLiked = likedBy.includes(userId);
+  const [localLikedBy, setLocalLikedBy] = useState<string[]>(likedBy);
+  const isLiked = localLikedBy.includes(userId);
 
   const handleLike = async () => {
     const ref = doc(db, "proyectos", projectId);
     if (isLiked) {
       await updateDoc(ref, { likedBy: arrayRemove(userId) });
+      setLocalLikedBy(prev => prev.filter(id => id !== userId));
     } else {
       await updateDoc(ref, { likedBy: arrayUnion(userId) });
+      setLocalLikedBy(prev => [...prev, userId]);
     }
   };
 
