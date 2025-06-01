@@ -76,6 +76,7 @@ export default function Profile() {
           etiquetas: data.etiquetas ?? [],
           likedBy: data.likedBy ?? [],
           name: data.name ?? "",
+          timestamp: 0
         };
         lista.push(project);
       });
@@ -154,6 +155,7 @@ export default function Profile() {
               etiquetas: data.etiquetas ?? [],
               likedBy: data.likedBy ?? [],
               name: data.name ?? "",
+              timestamp: 0
             };
             allFavProjects.push(project);
           });
@@ -250,7 +252,7 @@ export default function Profile() {
         <div className="mb-2"><b>Email:</b> {user?.email}</div>
         <div className="mb-2"><b>LinkedIn:</b>{" "}
           {portfolio.linkedin ? (
-            <a href={portfolio.linkedin} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
+            <a href={`/user/${user?.uid}`} className="text-blue-600 underline hover:text-blue-800">
               Ver Perfil
             </a>
           ) : <span className="text-gray-400">No registrado</span>}
@@ -288,11 +290,18 @@ export default function Profile() {
           <ul className="text-sm ml-4">
             {allUsers.filter(u => following.includes(u.id)).map(u => (
               <li key={u.id}>
-                <span>{u.email}</span>
+                <a
+                  href={`/user/${u.id}`}
+                  className="text-blue-600 underline hover:text-blue-800"
+                >
+                  {u.email}
+                </a>
                 <button
                   className="ml-2 text-blue-600 underline"
                   onClick={() => handleFollow(u.id)}
-                >Dejar de seguir</button>
+                >
+                  Dejar de seguir
+                </button>
               </li>
             ))}
           </ul>
@@ -301,11 +310,19 @@ export default function Profile() {
           <b>Te siguen:</b>
           <ul className="text-sm ml-4">
             {allUsers.filter(u => followers.includes(u.id)).map(u => (
-              <li key={u.id}>{u.email}</li>
+              <li key={u.id}>
+                <a
+                  href={`/user/${u.id}`}
+                  className="text-blue-600 underline hover:text-blue-800"
+                >
+                  {u.email}
+                </a>
+              </li>
             ))}
           </ul>
         </div>
       </div>
+
       {/* DERECHA: Dashboard y proyectos */}
       <div className="flex-1">
         <div className="flex justify-between items-center mb-6">
@@ -389,7 +406,7 @@ export default function Profile() {
                     onDelete={() => setProjectToDelete(project)}
                     userFavorites={userFavorites}
                     onFavoritesChange={refreshFavorites}
-                    onLikesChange={refreshProjects} // NUEVO
+                    onLikesChange={refreshProjects}
                   />
                 ) : null
               )}

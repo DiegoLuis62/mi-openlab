@@ -11,15 +11,17 @@ interface ProjectCardProps {
   onFavoritesChange?: () => void;
   onLikesChange?: () => void;
 }
+
 export default function ProjectCard({
   project,
   onEdit,
   onDelete,
   userFavorites = [],
-  onFavoritesChange,
-  onLikesChange,
+  onFavoritesChange
 }: ProjectCardProps) {
   const { user } = useAuth();
+  const isOwner = user && user.uid === project.uid;
+
   return (
     <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
       <h3 className="text-lg font-bold text-gray-900 dark:text-white">{project.titulo}</h3>
@@ -31,7 +33,6 @@ export default function ProjectCard({
               projectId={project.id}
               likedBy={project.likedBy || []}
               userId={user.uid}
-              onLikesChange={onLikesChange}
             />
             <FavoriteButton
               userId={user.uid}
@@ -42,20 +43,24 @@ export default function ProjectCard({
           </>
         )}
       </div>
-      <div className="flex justify-end gap-2 mt-3">
-        <button
-          onClick={() => onEdit(project)}
-          className="text-blue-600 dark:text-blue-400 hover:underline text-sm"
-        >
-          Editar
-        </button>
-        <button
-          onClick={onDelete}
-          className="text-red-600 dark:text-red-400 hover:underline text-sm"
-        >
-          Eliminar
-        </button>
-      </div>
+      {/* Solo el dueño puede editar/eliminar */}
+      {isOwner && (
+        <div className="flex justify-end gap-2 mt-3">
+          <button
+            onClick={() => onEdit(project)}
+            className="text-blue-600 dark:text-blue-400 hover:underline text-sm"
+          >
+            Editar
+          </button>
+          <button
+            onClick={onDelete}
+            className="text-red-600 dark:text-red-400 hover:underline text-sm"
+          >
+            Eliminar
+          </button>
+        </div>
+      )}
     </div>
   );
 }
+  

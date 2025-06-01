@@ -1,77 +1,170 @@
-import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { doc, getDoc, updateDoc, arrayUnion, arrayRemove } from "firebase/firestore";
+import { useEffect, useState } from "react";
+import { doc, getDoc, collection, getDocs, query, where, updateDoc, arrayUnion, arrayRemove } from "firebase/firestore";
 import { db } from "../firebase";
+import { Project, User } from "../types";
+import ProjectCard from "../components/ProjectCard";
 import { useAuth } from "../context/useAuth";
-import { User } from "../types";
 
 export default function UserProfile() {
-  const { id } = useParams<{ id: string }>(); // id = userId de la URL
+  const { id: profileId } = useParams<{ id: string }>();
   const { user } = useAuth();
-  const [profile, setProfile] = useState<User | null>(null);
-  const [isFollowing, setIsFollowing] = useState<boolean>(false);
-  const [loading, setLoading] = useState<boolean>(true);
+
+  const [profileUser, setProfileUser] = useState<User | null>(null);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [allUsers, setAllUsers] = useState<User[]>([]);
+  const [myFollowing, setMyFollowing] = useState<string[]>([]);
+  const [refresh, setRefresh] = useState(false); // 👈
 
   useEffect(() => {
-    if (!id) return;
-    const fetchProfile = async () => {
-      const docRef = doc(db, "users", id);
-      const snap = await getDoc(docRef);
+    if (!profileId) return;
+    const fetchData = async () => {
+
+      const ref = doc(db, "users", profileId);
+      const snap = await getDoc(ref);
       if (snap.exists()) {
         const data = snap.data() as User;
-        setProfile({ ...data, id });
-        // Verifica si el usuario logueado ya sigue a este usuario
-        if (user?.uid) {
-          setIsFollowing((data.followers ?? []).includes(user.uid));
+        setProfileUser({
+          id: snap.id,
+          email: data.email ?? "",
+          following: data.following ?? [],
+          favorites: data.favorites ?? [],
+          habilidades: data.habilidades ?? [],
+          followers: data.followers ?? [],
+          experiencia: data.experiencia ?? [],
+          educacion: data.educacion ?? [],
+          linkedin: data.linkedin ?? "",
+          stack: data.stack ?? [],
+          badges: data.badges ?? [],
+          points: data.points ?? 0,
+        });
+      }
+
+      const q = query(collection(db, "proyectos"), where("uid", "==", profileId));
+      const querySnapshot = await getDocs(q);
+      const lista: Project[] = [];
+      querySnapshot.forEach((docSnap) => {
+        const data = docSnap.data();
+        lista.push({
+          id: docSnap.id,
+          titulo: data.titulo,
+          descripcion: data.descripcion,
+          autor: data.autor,
+          uid: data.uid,
+          imageUrl: data.imageUrl,
+          githubLink: data.githubLink,
+          demoLink: data.demoLink,
+          categorias: data.categorias ?? [],
+          tecnologias: data.tecnologias ?? [],
+          etiquetas: data.etiquetas ?? [],
+          likedBy: data.likedBy ?? [],
+          name: data.name ?? "",
+          timestamp: data.timestamp ?? 0,
+        });
+      });
+      setProjects(lista);
+
+      const usersSnap = await getDocs(collection(db, "users"));
+      const usersList: User[] = [];
+      usersSnap.forEach((docSnap) => {
+        const data = docSnap.data();
+        usersList.push({
+          id: docSnap.id,
+          email: data.email ?? "",
+          following: data.following ?? [],
+          favorites: data.favorites ?? [],
+          habilidades: data.habilidades ?? [],
+          followers: data.followers ?? [],
+          experiencia: data.experiencia ?? [],
+          educacion: data.educacion ?? [],
+          linkedin: data.linkedin ?? "",
+          stack: data.stack ?? [],
+          badges: data.badges ?? [],
+          points: data.points ?? 0,
+        });
+      });
+      setAllUsers(usersList);
+
+      if (user?.uid) {
+        const mySnap = await getDoc(doc(db, "users", user.uid));
+        if (mySnap.exists()) {
+          setMyFollowing(mySnap.data().following ?? []);
         }
       }
+
       setLoading(false);
     };
-    fetchProfile();
-  }, [id, user?.uid]);
+    fetchData();
+  }, [profileId, user?.uid, refresh]); // 👈 ahora depende de refresh
+
+  // Seguidores dinámicamente: quienes tienen mi id en su following
+  const followers = allUsers.filter(u => (u.following ?? []).includes(profileId!));
+  const following = profileUser?.following ?? [];
+
+  // --- LÓGICA DE BOTÓN SEGUIR ---
+  const isMe = user?.uid === profileId;
+  const isFollowing = myFollowing.includes(profileId!);
 
   const handleFollow = async () => {
-    // VALIDACIÓN: solo ejecuta si ambos son string
-    if (!user?.uid || !id) return;
+    if (!user?.uid || isMe) return;
     const myRef = doc(db, "users", user.uid);
-    const targetRef = doc(db, "users", id);
-
     if (isFollowing) {
-      await updateDoc(myRef, { following: arrayRemove(id) });
-      await updateDoc(targetRef, { followers: arrayRemove(user.uid) });
-      setIsFollowing(false);
+      await updateDoc(myRef, { following: arrayRemove(profileId) });
+      setMyFollowing(prev => prev.filter(id => id !== profileId));
     } else {
-      await updateDoc(myRef, { following: arrayUnion(id) });
-      await updateDoc(targetRef, { followers: arrayUnion(user.uid) });
-      setIsFollowing(true);
+      await updateDoc(myRef, { following: arrayUnion(profileId) });
+      setMyFollowing(prev => [...prev, profileId!]);
     }
+    setRefresh(r => !r); // 👈 fuerza refresco tras seguir/dejar de seguir
   };
 
-  if (loading) return <p>Cargando perfil...</p>;
-  if (!profile) return <p>No se encontró el usuario.</p>;
+  if (loading || !profileUser) {
+    return <div className="p-6 text-gray-500 dark:text-gray-400">Cargando perfil...</div>;
+  }
 
   return (
-    <div className="p-6 max-w-2xl mx-auto">
-      <h2 className="text-2xl font-bold mb-2">{profile.email}</h2>
-      {/* Información básica del perfil */}
-      <div className="mb-2"><b>LinkedIn:</b>{" "}
-        {profile.linkedin ? (
-          <a href={profile.linkedin} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
-            Ver Perfil
-          </a>
+    <div className="max-w-3xl mx-auto p-6 bg-white dark:bg-gray-900 rounded-lg shadow">
+      <h2 className="text-2xl font-bold mb-2 dark:text-white">Perfil de Usuario</h2>
+      <div className="mb-2"><b>Email:</b> {profileUser.email}</div>
+      <div className="mb-2">
+        <b>LinkedIn:</b>{" "}
+        {profileUser.linkedin ? (
+          <a href={profileUser.linkedin} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">Ver Perfil</a>
         ) : <span className="text-gray-400">No registrado</span>}
       </div>
-      <div className="mb-2"><b>Stack tecnológico:</b> {profile.stack?.join(", ")}</div>
-      <div className="mb-2"><b>Habilidades:</b> {profile.habilidades?.join(", ")}</div>
-      {/* Puedes agregar experiencia, educación, badges, etc. */}
-      {user?.uid && user.uid !== id && (
+      <div className="mb-2"><b>Stack tecnológico:</b> {(profileUser.stack ?? []).join(", ")}</div>
+      <div className="mb-2"><b>Habilidades:</b> {(profileUser.habilidades ?? []).join(", ")}</div>
+      <div className="mb-2"><b>Siguiendo:</b> {following.length}</div>
+      <div className="mb-2"><b>Seguidores:</b> {followers.length}</div>
+
+      {/* Botón Seguir/Dejar de seguir */}
+      {!isMe && user && (
         <button
-          className={`px-4 py-2 rounded ${isFollowing ? "bg-red-500" : "bg-green-500"} text-white`}
+          className={`px-3 py-1 rounded ${isFollowing ? 'bg-gray-300' : 'bg-blue-500 text-white'} mt-2`}
           onClick={handleFollow}
         >
-          {isFollowing ? "Dejar de seguir" : "Seguir"}
+          {isFollowing ? 'Dejar de seguir' : 'Seguir'}
         </button>
       )}
+
+      <div className="my-4">
+        <h3 className="font-bold text-lg dark:text-white mb-2">Proyectos</h3>
+        {projects.length === 0 ? (
+          <p className="text-gray-500 dark:text-gray-300">No hay proyectos públicos de este usuario.</p>
+        ) : (
+          <div className="grid md:grid-cols-2 gap-6">
+            {projects.map((p) => (
+              <ProjectCard
+                key={p.id}
+                project={p}
+                onEdit={() => {}} 
+                onDelete={() => {}}
+              />
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

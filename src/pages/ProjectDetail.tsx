@@ -12,6 +12,7 @@ type Proyecto = {
   titulo: string;
   descripcion: string;
   autor: string;
+  uid?: string; // <-- aseguramos que este campo exista
   likedBy?: string[];
   categorias?: string[];
   tecnologias?: string[];
@@ -42,6 +43,7 @@ export default function ProjectDetail() {
           titulo: data.titulo,
           descripcion: data.descripcion,
           autor: data.autor || 'anónimo',
+          uid: data.uid, // <-- aquí traemos el UID
           likedBy: data.likedBy || [],
           categorias: data.categorias || [],
           tecnologias: data.tecnologias || [],
@@ -111,7 +113,13 @@ export default function ProjectDetail() {
       )}
       <p className="text-gray-700 dark:text-gray-300 mb-4">{proyecto.descripcion}</p>
       <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
-        Autor: <span className="font-medium">{proyecto.autor}</span>
+        Autor:{" "}
+        <Link
+          to={`/user/${proyecto.uid ?? ""}`}
+          className="text-blue-600 underline hover:text-blue-800"
+        >
+          {proyecto.autor}
+        </Link>
       </p>
       <div className="flex flex-wrap gap-3 mb-4">
         {proyecto.categorias && proyecto.categorias.length > 0 && (

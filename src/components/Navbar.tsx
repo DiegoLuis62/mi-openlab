@@ -8,17 +8,21 @@ export default function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { darkMode, toggleDarkMode } = useDarkMode(); // Usando el contexto
+  const { darkMode, toggleDarkMode } = useDarkMode();
 
   const handleLogout = async () => {
     await signOut(auth);
     navigate('/');
   };
 
+  // Ahora incluye FEED si el usuario está logueado
   const navItems = [
     { label: 'Explorar', path: '/' },
     ...(user
-      ? [{ label: 'Perfil', path: '/profile' }]
+      ? [
+          { label: 'Feed', path: '/feed' },      // <-- Añadido aquí
+          { label: 'Perfil', path: '/profile' }
+        ]
       : [
           { label: 'Login', path: '/login' },
           { label: 'Registro', path: '/register' },
@@ -54,7 +58,7 @@ export default function Navbar() {
             )}
           </div>
           <button
-            onClick={toggleDarkMode} // Usando la función toggleDarkMode del contexto
+            onClick={toggleDarkMode}
             className="text-gray-800 dark:text-gray-200"
             aria-label="Toggle Dark Mode"
           >

@@ -1,4 +1,5 @@
 export interface Project {
+  timestamp: number;
   id: string;
   titulo: string;
   descripcion: string;
@@ -17,7 +18,7 @@ export interface Project {
 export interface User {
   id: string;
   email: string;
-  following: string[];
+  following?: string[];
   favorites?: string[];
   habilidades?: string[];
   followers?: string[];
