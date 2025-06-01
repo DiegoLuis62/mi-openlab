@@ -6,13 +6,13 @@ interface FavoriteButtonProps {
   userId: string;
   projectId: string;
   favorites: string[];
+  onFavoritesChange?: () => void;
 }
 
-export default function FavoriteButton({ userId, projectId, favorites }: FavoriteButtonProps) {
+export default function FavoriteButton({ userId, projectId, favorites, onFavoritesChange }: FavoriteButtonProps) {
   const [localFavorites, setLocalFavorites] = useState<string[]>(favorites);
   const isFav = localFavorites.includes(projectId);
 
-  // Sincroniza favoritos si cambian en props
   useEffect(() => {
     setLocalFavorites(favorites);
   }, [favorites]);
@@ -27,8 +27,8 @@ export default function FavoriteButton({ userId, projectId, favorites }: Favorit
         await updateDoc(ref, { favorites: arrayUnion(projectId) });
         setLocalFavorites(prev => [...prev, projectId]);
       }
+      if (onFavoritesChange) onFavoritesChange();
     } catch (error: unknown) {
-      // type guard para firebase errors
       if (
         typeof error === "object" &&
         error !== null &&
@@ -40,6 +40,7 @@ export default function FavoriteButton({ userId, projectId, favorites }: Favorit
       ) {
         await setDoc(ref, { favorites: isFav ? [] : [projectId] }, { merge: true });
         setLocalFavorites(isFav ? [] : [projectId]);
+        if (onFavoritesChange) onFavoritesChange();
       } else {
         console.error("Error actualizando favoritos:", error);
       }

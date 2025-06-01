@@ -8,9 +8,16 @@ interface ProjectCardProps {
   onEdit: (project: Project) => void;
   onDelete: () => void;
   userFavorites?: string[];
+  onFavoritesChange?: () => void;
 }
 
-export default function ProjectCard({ project, onEdit, onDelete, userFavorites = [] }: ProjectCardProps) {
+export default function ProjectCard({
+  project,
+  onEdit,
+  onDelete,
+  userFavorites = [],
+  onFavoritesChange
+}: ProjectCardProps) {
   const { user } = useAuth();
   return (
     <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
@@ -28,6 +35,7 @@ export default function ProjectCard({ project, onEdit, onDelete, userFavorites =
               userId={user.uid}
               projectId={project.id}
               favorites={userFavorites}
+              onFavoritesChange={onFavoritesChange}
             />
           </>
         )}
