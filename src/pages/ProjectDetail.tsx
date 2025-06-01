@@ -5,7 +5,7 @@ import { db } from '../firebase';
 import { useAuth } from '../context/useAuth';
 import LikeButton from '../components/LikeButton';
 import FavoriteButton from '../components/FavoriteButton';
-import Comments from '../components/Comments'; 
+import Comments from '../components/Comments';
 
 type Proyecto = {
   id: string;
@@ -13,6 +13,12 @@ type Proyecto = {
   descripcion: string;
   autor: string;
   likedBy?: string[];
+  categorias?: string[];
+  tecnologias?: string[];
+  etiquetas?: string[];
+  githubLink?: string;
+  demoLink?: string;
+  imageUrl?: string;
 };
 
 export default function ProjectDetail() {
@@ -37,6 +43,12 @@ export default function ProjectDetail() {
           descripcion: data.descripcion,
           autor: data.autor || 'anónimo',
           likedBy: data.likedBy || [],
+          categorias: data.categorias || [],
+          tecnologias: data.tecnologias || [],
+          etiquetas: data.etiquetas || [],
+          githubLink: data.githubLink || "",
+          demoLink: data.demoLink || "",
+          imageUrl: data.imageUrl || "",
         });
       } else {
         setProyecto(null);
@@ -90,10 +102,62 @@ export default function ProjectDetail() {
   return (
     <div className="max-w-3xl mx-auto mt-10 bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
       <h2 className="text-2xl font-bold mb-4">{proyecto.titulo}</h2>
+      {proyecto.imageUrl && (
+        <img
+          src={proyecto.imageUrl}
+          alt="preview"
+          className="mb-4 max-h-64 object-contain rounded border mx-auto"
+        />
+      )}
       <p className="text-gray-700 dark:text-gray-300 mb-4">{proyecto.descripcion}</p>
-      <p className="text-sm text-gray-500 dark:text-gray-400">
+      <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
         Autor: <span className="font-medium">{proyecto.autor}</span>
       </p>
+      <div className="flex flex-wrap gap-3 mb-4">
+        {proyecto.categorias && proyecto.categorias.length > 0 && (
+          <div>
+            <span className="font-bold">Categorías:</span>{" "}
+            {proyecto.categorias.join(", ")}
+          </div>
+        )}
+        {proyecto.tecnologias && proyecto.tecnologias.length > 0 && (
+          <div>
+            <span className="font-bold">Tecnologías:</span>{" "}
+            {proyecto.tecnologias.join(", ")}
+          </div>
+        )}
+        {proyecto.etiquetas && proyecto.etiquetas.length > 0 && (
+          <div>
+            <span className="font-bold">Etiquetas:</span>{" "}
+            {proyecto.etiquetas.join(", ")}
+          </div>
+        )}
+      </div>
+      {/* Mostrar links si existen */}
+      {(proyecto.githubLink || proyecto.demoLink) && (
+        <div className="flex gap-4 my-2">
+          {proyecto.githubLink && (
+            <a
+              href={proyecto.githubLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-700 dark:text-blue-300 underline text-sm"
+            >
+              GitHub
+            </a>
+          )}
+          {proyecto.demoLink && (
+            <a
+              href={proyecto.demoLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-700 dark:text-blue-300 underline text-sm"
+            >
+              Demo/Video
+            </a>
+          )}
+        </div>
+      )}
       <div className="flex gap-2 my-4">
         {user && (
           <>

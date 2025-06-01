@@ -1,14 +1,10 @@
-// src/components/ProjectForm.tsx
 import { useState, FormEvent } from "react";
 import { db } from "../firebase";
 import { collection, addDoc, updateDoc, doc } from "firebase/firestore";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useAuth } from "../context/useAuth";
 import { Project } from "../types";
-
-const OPCIONES_CATEGORIAS = ["Web", "IA", "Mobile", "Data Science"];
-const OPCIONES_TECNOLOGIAS = ["React", "Firebase", "Node.js", "Python"];
-const OPCIONES_ETIQUETAS = ["open source", "educativo", "startup"];
+import ChipsInput from "./ChipsInput";
 
 export interface ProjectFormProps {
   existingProject: Project | null;
@@ -31,7 +27,7 @@ export default function ProjectForm({
   const [imageUrl, setImageUrl] = useState(existingProject?.imageUrl || "");
   const [uploading, setUploading] = useState(false);
 
-  // Estados de arrays para selección múltiple
+  // Arrays de chips personalizables
   const [categorias, setCategorias] = useState<string[]>(existingProject?.categorias || []);
   const [tecnologias, setTecnologias] = useState<string[]>(existingProject?.tecnologias || []);
   const [etiquetas, setEtiquetas] = useState<string[]>(existingProject?.etiquetas || []);
@@ -68,19 +64,22 @@ export default function ProjectForm({
       }
       setUploading(false);
     }
-
     const data = {
       titulo,
       descripcion,
       autor: user.displayName || user.email || "Anónimo",
       uid: user.uid,
       imageUrl: finalImageUrl,
-      githubLink,
-      demoLink,
+      githubLink: githubLink || "",
+      demoLink: demoLink || "",
       categorias,
       tecnologias,
       etiquetas,
     };
+
+
+    // Para debug:
+    console.log("Datos a guardar:", data);
 
     try {
       if (existingProject?.id) {
@@ -119,66 +118,26 @@ export default function ProjectForm({
           className="w-full mb-3 px-4 py-2 border rounded focus:outline-none dark:bg-gray-800 dark:text-white"
           required
         ></textarea>
-        {/* Categorías */}
-        <div className="mb-3">
-          <span className="font-semibold dark:text-white">Categorías:</span>
-          <div className="flex flex-wrap gap-2 mt-2">
-            {OPCIONES_CATEGORIAS.map(cat => (
-              <label key={cat} className="flex items-center gap-1">
-                <input
-                  type="checkbox"
-                  checked={categorias.includes(cat)}
-                  onChange={e =>
-                    setCategorias(e.target.checked
-                      ? [...categorias, cat]
-                      : categorias.filter(c => c !== cat))
-                  }
-                />
-                <span className="dark:text-white">{cat}</span>
-              </label>
-            ))}
-          </div>
-        </div>
-        {/* Tecnologías */}
-        <div className="mb-3">
-          <span className="font-semibold dark:text-white">Tecnologías:</span>
-          <div className="flex flex-wrap gap-2 mt-2">
-            {OPCIONES_TECNOLOGIAS.map(tech => (
-              <label key={tech} className="flex items-center gap-1">
-                <input
-                  type="checkbox"
-                  checked={tecnologias.includes(tech)}
-                  onChange={e =>
-                    setTecnologias(e.target.checked
-                      ? [...tecnologias, tech]
-                      : tecnologias.filter(t => t !== tech))
-                  }
-                />
-                <span className="dark:text-white">{tech}</span>
-              </label>
-            ))}
-          </div>
-        </div>
-        {/* Etiquetas */}
-        <div className="mb-3">
-          <span className="font-semibold dark:text-white">Etiquetas:</span>
-          <div className="flex flex-wrap gap-2 mt-2">
-            {OPCIONES_ETIQUETAS.map(tag => (
-              <label key={tag} className="flex items-center gap-1">
-                <input
-                  type="checkbox"
-                  checked={etiquetas.includes(tag)}
-                  onChange={e =>
-                    setEtiquetas(e.target.checked
-                      ? [...etiquetas, tag]
-                      : etiquetas.filter(t => t !== tag))
-                  }
-                />
-                <span className="dark:text-white">{tag}</span>
-              </label>
-            ))}
-          </div>
-        </div>
+
+        <ChipsInput
+          label="Categorías:"
+          values={categorias}
+          setValues={setCategorias}
+          placeholder="Añade categoría y Enter..."
+        />
+        <ChipsInput
+          label="Tecnologías:"
+          values={tecnologias}
+          setValues={setTecnologias}
+          placeholder="Añade tecnología y Enter..."
+        />
+        <ChipsInput
+          label="Etiquetas:"
+          values={etiquetas}
+          setValues={setEtiquetas}
+          placeholder="Añade etiqueta y Enter..."
+        />
+
         {/* Links externos */}
         <input
           type="url"
