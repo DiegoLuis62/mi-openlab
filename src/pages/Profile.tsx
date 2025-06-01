@@ -50,43 +50,46 @@ export default function Profile() {
   // Actividad
   const [lastActivity, setLastActivity] = useState<string | null>(null);
   const [activityLog, setActivityLog] = useState<ActivityLogEntry[]>([]);
-  // Carga de mis proyectos
-  useEffect(() => {
+
+  // === 1. Refrescar proyectos propios (para likes) ===
+  const fetchProjects = async () => {
     if (user && user.uid) {
-      const fetchProjects = async () => {
-        const q = query(
-          collection(db, "proyectos"),
-          where("uid", "==", user.uid)
-        );
-        const querySnapshot = await getDocs(q);
-        const lista: Project[] = [];
-        querySnapshot.forEach((docSnap) => {
-          const data = docSnap.data();
-          const project: Project = {
-            id: docSnap.id,
-            titulo: data.titulo,
-            descripcion: data.descripcion,
-            autor: data.autor,
-            uid: data.uid,
-            imageUrl: data.imageUrl,
-            githubLink: data.githubLink,
-            demoLink: data.demoLink,
-            categorias: data.categorias ?? [],
-            tecnologias: data.tecnologias ?? [],
-            etiquetas: data.etiquetas ?? [],
-            likedBy: data.likedBy ?? [],
-            name: data.name ?? '',
-          };
-          lista.push(project);
-        });
-        setProjects(lista);
-        setLoading(false);
-      };
-      fetchProjects();
+      const q = query(
+        collection(db, "proyectos"),
+        where("uid", "==", user.uid)
+      );
+      const querySnapshot = await getDocs(q);
+      const lista: Project[] = [];
+      querySnapshot.forEach((docSnap) => {
+        const data = docSnap.data();
+        const project: Project = {
+          id: docSnap.id,
+          titulo: data.titulo,
+          descripcion: data.descripcion,
+          autor: data.autor,
+          uid: data.uid,
+          imageUrl: data.imageUrl,
+          githubLink: data.githubLink,
+          demoLink: data.demoLink,
+          categorias: data.categorias ?? [],
+          tecnologias: data.tecnologias ?? [],
+          etiquetas: data.etiquetas ?? [],
+          likedBy: data.likedBy ?? [],
+          name: data.name ?? "",
+        };
+        lista.push(project);
+      });
+      setProjects(lista);
+      setLoading(false);
     }
+  };
+
+  useEffect(() => {
+    fetchProjects();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
-  // Carga de favoritos del usuario y sus proyectos + actividad
+  // === 2. Refrescar favoritos y favoritos-proyectos ===
   useEffect(() => {
     fetchFavorites();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -100,6 +103,7 @@ export default function Profile() {
       const data = snap.data() as User;
       const favs: string[] = data.favorites ?? [];
       setUserFavorites(favs);
+
       // Seguimiento, portafolio, badges y puntos
       setFollowing(data.following ?? []);
       setPortfolio({
@@ -111,6 +115,7 @@ export default function Profile() {
         badges: data.badges ?? [],
         puntos: data.points ?? 0,
       });
+
       // Actividad
       setLastActivity(data.lastActivity ?? null);
       setActivityLog(
@@ -122,6 +127,7 @@ export default function Profile() {
               )
           : []
       );
+
       if (favs.length > 0) {
         // Firestore 'in' permite hasta 10 elementos por consulta
         const batches = [];
@@ -147,7 +153,7 @@ export default function Profile() {
               tecnologias: data.tecnologias ?? [],
               etiquetas: data.etiquetas ?? [],
               likedBy: data.likedBy ?? [],
-              name: data.name ?? '',
+              name: data.name ?? "",
             };
             allFavProjects.push(project);
           });
@@ -161,11 +167,16 @@ export default function Profile() {
       setFavoriteProjects([]);
     }
   };
-  // Para refrescar favoritos al instante
+
+  // === 3. Funciones para refrescar desde hijos ===
   const refreshFavorites = () => {
     fetchFavorites();
   };
-  // Cargar todos los usuarios para seguidores/seguidos
+  const refreshProjects = () => {
+    fetchProjects();
+  };
+
+  // === 4. Cargar todos los usuarios para seguidores/seguidos ===
   useEffect(() => {
     const fetchAllUsers = async () => {
       const querySnap = await getDocs(collection(db, "users"));
@@ -190,6 +201,7 @@ export default function Profile() {
     };
     fetchAllUsers();
   }, []);
+
   // Calculo de seguidores dinámicamente (quién me sigue)
   useEffect(() => {
     if (!user?.uid) return;
@@ -199,6 +211,7 @@ export default function Profile() {
 
   // Likes recibidos
   const totalLikes = projects.reduce((sum, p) => sum + (p.likedBy ? p.likedBy.length : 0), 0);
+
   // Botón Seguir/Dejar de Seguir
   const handleFollow = async (targetUserId: string) => {
     if (!user?.uid || user.uid === targetUserId) return;
@@ -213,6 +226,7 @@ export default function Profile() {
     }
     setFollowing(newFollowing);
   };
+
   const handleDelete = async (id: string | undefined) => {
     if (!id || !user?.uid) return;
     const proj = projects.find((p) => p.id === id);
@@ -220,11 +234,14 @@ export default function Profile() {
     await addActivity(user.uid, "delete", `Eliminó el proyecto "${proj?.titulo ?? ""}"`);
     setProjects(projects.filter((p) => p.id !== id));
     setProjectToDelete(null);
+    refreshProjects();
   };
+
   const handleEdit = (project: Project) => {
     setEditingProject(project);
     setShowForm(true);
   };
+
   return (
     <div className="flex flex-col md:flex-row gap-8 p-6">
       {/* IZQUIERDA: Perfil y comunidad */}
@@ -349,6 +366,8 @@ export default function Profile() {
                   onEdit={handleEdit}
                   onDelete={() => setProjectToDelete(project)}
                   userFavorites={userFavorites}
+                  onFavoritesChange={refreshFavorites}
+                  onLikesChange={refreshProjects}
                 />
               ) : null
             )}
@@ -370,6 +389,7 @@ export default function Profile() {
                     onDelete={() => setProjectToDelete(project)}
                     userFavorites={userFavorites}
                     onFavoritesChange={refreshFavorites}
+                    onLikesChange={refreshProjects} // NUEVO
                   />
                 ) : null
               )}

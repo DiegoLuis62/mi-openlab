@@ -9,14 +9,15 @@ interface ProjectCardProps {
   onDelete: () => void;
   userFavorites?: string[];
   onFavoritesChange?: () => void;
+  onLikesChange?: () => void;
 }
-
 export default function ProjectCard({
   project,
   onEdit,
   onDelete,
   userFavorites = [],
-  onFavoritesChange
+  onFavoritesChange,
+  onLikesChange,
 }: ProjectCardProps) {
   const { user } = useAuth();
   return (
@@ -30,6 +31,7 @@ export default function ProjectCard({
               projectId={project.id}
               likedBy={project.likedBy || []}
               userId={user.uid}
+              onLikesChange={onLikesChange}
             />
             <FavoriteButton
               userId={user.uid}
